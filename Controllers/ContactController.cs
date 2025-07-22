@@ -27,5 +27,17 @@ namespace ContactProject.Controllers
             var result = await _mediator.Send(command);
             return Ok(result);
         }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditContact(int id,[FromBody] EditContactCommand command)
+        { 
+            var result= await _mediator.Send(command);
+            return Ok(result);
+        }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteContact(int id)
+        {
+            var result = await _mediator.Send(new DeleteContactCommand(id));
+            return Ok(result);
+        }
     }
 }
