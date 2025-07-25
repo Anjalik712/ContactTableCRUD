@@ -11,11 +11,16 @@ SELECT * FROM get_all_contacts(
 		}
     ],"LastName": [
       {
-        "Values": ["xy"]
+        "Values": [""]
       }
 	]
   }'::jsonb,
-  '{}'::jsonb,
+  '[
+	{
+		"SortBy": "FirstName",
+		"SortDirection": "DESC" 
+	}
+   ]'::jsonb,
   0,
   0
 );

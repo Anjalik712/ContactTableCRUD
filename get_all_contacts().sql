@@ -22,6 +22,8 @@ DECLARE
 	firstname_pattern TEXT := '';
 	middlename_pattern TEXT := '';
 	lastname_pattern TEXT := '';
+	order_by_clause TEXT := '';
+    order_item JSONB;
 BEGIN
 	IF filters ? 'FirstName' THEN
 		firstname_pattern :=lower('%'||(filters->'FirstName'->0->'Values'->>0)||'%');
@@ -56,6 +58,28 @@ BEGIN
 		    );
 	END IF;
 	
+	IF orderby IS NOT NULL THEN
+		FOR order_item IN SELECT * FROM jsonb_array_elements(orderby)
+		LOOP
+			CASE LOWER(order_item->>'SortBy')
+				WHEN 'age' THEN
+					order_by_clause := order_by_clause || FORMAT('"Age" %s, ',order_item->>'SortDirection');
+				WHEN 'firstname' THEN
+					order_by_clause := order_by_clause || FORMAT('"FirstName" %s, ',order_item->>'SortDirection');
+				WHEN 'middlename' THEN
+					order_by_clause := order_by_clause || FORMAT('"MiddleName" %s, ',order_item->>'SortDirection');
+				WHEN 'lastname' THEN
+					order_by_clause := order_by_clause || FORMAT('"LastName" %s, ',order_item->>'SortDirection');
+				ELSE
+					order_by_clause := order_by_clause;
+			END CASE;
+		END LOOP;
+		IF order_by_clause <> '' THEN
+	        order_by_clause := RTRIM(order_by_clause, ', ');
+	        order_by_clause := 'ORDER BY ' || order_by_clause;
+	    END IF;
+	END IF;
+	
 	base_query='SELECT 
         "Id"::INT,
         "FirstName"::VARCHAR,
@@ -68,7 +92,7 @@ BEGIN
         "ModifiedBy"::VARCHAR,
         "ModifiedDate"::TIMESTAMP
     FROM "Contact" WHERE true';
-	final_query := base_query || name_filter || ' ' || take_skip_query;
+	final_query := base_query || name_filter || order_by_clause ||' ' || take_skip_query;
     RETURN QUERY EXECUTE final_query;
     
 END;
